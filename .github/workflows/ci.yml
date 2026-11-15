@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Import the build in Node 18
+        run: node -e "import('./dist/index.js').then(m => { const f = m.fitWeibull([16,34,53,75,93,120]); if (!f || Math.abs(f.shape - 1.43) > 0.01) process.exit(1); console.log('ok', f.shape, f.scale); })"
